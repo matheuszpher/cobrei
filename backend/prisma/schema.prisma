@@ -21,13 +21,17 @@ enum Canal {
 model Usuario {
   id        Int      @id @default(autoincrement())
   nome      String
+  nomeLoja  String
   email     String   @unique
   senhaHash String
   criadoEm  DateTime @default(now())
+  clientes  Cliente[]
 }
 
 model Cliente {
   id            Int           @id @default(autoincrement())
+  usuarioId     Int
+  usuario       Usuario       @relation(fields: [usuarioId], references: [id])
   nome          String
   telefone      String
   email         String?
@@ -38,6 +42,8 @@ model Cliente {
   vendas        Venda[]
   pagamentos    Pagamento[]
   notificacoes  Notificacao[]
+
+  @@index([usuarioId])
 }
 
 model Venda {

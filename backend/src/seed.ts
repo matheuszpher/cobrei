@@ -16,8 +16,8 @@ async function main() {
     console.log('[seed] banco já populado, nada a fazer');
     return;
   }
-  await prisma.usuario.create({
-    data: { nome: 'Dona Maria', email: 'admin@fiado.com', senhaHash: await bcrypt.hash(senhaAdmin(), 10) },
+  const admin = await prisma.usuario.create({
+    data: { nome: 'Dona Maria', nomeLoja: process.env.NOME_LOJA ?? 'Mercadinho Bom Preço', email: 'admin@fiado.com', senhaHash: await bcrypt.hash(senhaAdmin(), 10) },
   });
 
   const clientes = await Promise.all(
@@ -27,7 +27,7 @@ async function main() {
       ['Francisca Lima', '(88) 99321-9900', 500], ['Pedro Henrique Sousa', '(88) 99188-2233', 700],
       ['Lucinha da Padaria', '(88) 99266-4455', 1000], ['Marcos Vinícius', '(88) 99910-6677', 350],
     ].map(([nome, telefone, limiteCredito]) =>
-      prisma.cliente.create({ data: { nome: nome as string, telefone: telefone as string, limiteCredito: limiteCredito as number } })),
+      prisma.cliente.create({ data: { usuarioId: admin.id, nome: nome as string, telefone: telefone as string, limiteCredito: limiteCredito as number } })),
   );
 
   // [cliente, dias atrás da compra, prazo em dias, valor, descrição, pago (fração)]

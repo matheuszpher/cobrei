@@ -1,7 +1,8 @@
 // Casos de uso do fiado: clientes, vendas, pagamentos, devedores, cobrança e painel.
-import { prisma, vendaRepo, clienteRepo, n, VendaCompleta, vendaInclude } from '../../adapters/persistence/repositorios';
+import { prisma, vendaRepo, clienteRepo, daLoja, n, VendaCompleta, vendaInclude } from '../../adapters/persistence/repositorios';
 import { arred, cabeNoLimite, diasDeAtraso, ErroDeNegocio, faixaDeAtraso, mensagemDeCobranca, nivelDeAtraso, statusDaVenda } from '../../domain/fiado';
-import { relogio, notificador, NOME_LOJA } from '../../infra/container';
+import { relogio, notificador } from '../../infra/container';
+import { lojaAtual } from '../../infra/lojaAtual';
 
 export function mapVenda(v: VendaCompleta) {
   const total = n(v.total);
@@ -103,7 +104,7 @@ const mapPag = (p: any) => ({ id: p.id, vendaId: p.vendaId, clienteId: p.cliente
 
 export async function listarPagamentos(clienteId?: number) {
   const ps = await prisma.pagamento.findMany({
-    where: { clienteId }, include: { cliente: { select: { nome: true } } }, orderBy: { data: 'desc' },
+    where: { clienteId, ...daLoja() }, include: { cliente: { select: { nome: true } } }, orderBy: { data: 'desc' },
   });
   return ps.map(mapPag);
 }
@@ -122,7 +123,7 @@ export async function registrarPagamento(d: { vendaId: number; valor: number; fo
 }
 
 export async function excluirPagamento(id: number) {
-  if (!(await prisma.pagamento.findUnique({ where: { id } }))) throw new ErroDeNegocio(404, 'Pagamento não encontrado');
+  if (!(await prisma.pagamento.findFirst({ where: { id, ...daLoja() } }))) throw new ErroDeNegocio(404, 'Pagamento não encontrado');
   await prisma.pagamento.delete({ where: { id } });
 }
 
@@ -130,6 +131,7 @@ export async function excluirPagamento(id: number) {
 export async function listarDevedores() {
   const vendas = (await vendaRepo.todas()).map(mapVenda).filter((v) => v.saldo > 0);
   const clientes = await prisma.cliente.findMany({
+    where: { usuarioId: lojaAtual() },
     include: { notificacoes: { orderBy: { criadaEm: 'desc' }, take: 1 } },
   });
   const lista = clientes.flatMap((c) => {
@@ -154,7 +156,8 @@ export async function listarDevedores() {
 export async function cobrarCliente(clienteId: number) {
   const devedor = (await listarDevedores()).find((d) => d.cliente.id === clienteId);
   if (!devedor) throw new ErroDeNegocio(409, 'Cliente não tem saldo devedor');
-  const texto = mensagemDeCobranca(devedor.cliente.nome, devedor.saldo, devedor.diasAtraso, NOME_LOJA);
+  const loja = await prisma.usuario.findUniqueOrThrow({ where: { id: lojaAtual() }, select: { nomeLoja: true } });
+  const texto = mensagemDeCobranca(devedor.cliente.nome, devedor.saldo, devedor.diasAtraso, loja.nomeLoja);
   const envio = await notificador.enviar(devedor.cliente.telefone, texto);
   const notificacao = await prisma.notificacao.create({
     data: { clienteId, canal: 'WHATSAPP', mensagem: envio.mensagem },
@@ -164,13 +167,13 @@ export async function cobrarCliente(clienteId: number) {
 }
 
 export const listarCobrancas = () =>
-  prisma.notificacao.findMany({ include: { cliente: { select: { nome: true } } }, orderBy: { criadaEm: 'desc' } });
+  prisma.notificacao.findMany({ where: daLoja(), include: { cliente: { select: { nome: true } } }, orderBy: { criadaEm: 'desc' } });
 
 // ---------- Painel ----------
 export async function painel() {
   const hoje = relogio.agora();
   const vendas = (await vendaRepo.todas()).map(mapVenda);
-  const pagamentos = await prisma.pagamento.findMany();
+  const pagamentos = await prisma.pagamento.findMany({ where: daLoja() });
   const devedores = await listarDevedores();
   const chaveMes = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 

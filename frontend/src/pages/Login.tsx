@@ -1,5 +1,5 @@
 import { FormEvent, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { AlertCircle, ArrowRight, Lock, Mail, Star } from 'lucide-react';
 import { api, auth, erroMsg, Usuario } from '../lib/api';
 import { Button } from '../components/Button';
@@ -98,6 +98,9 @@ export default function Login() {
               Entrar
             </Button>
           </form>
+          <p className="mt-6 text-center text-sm text-oliva">
+            Ainda não tem conta? <Link to="/cadastro" className="font-medium text-floresta underline underline-offset-4">Criar conta</Link>
+          </p>
           {import.meta.env.DEV && (
           <div className="mt-8 flex items-center gap-2 rounded-full border border-borda bg-white px-4 py-2.5 text-xs text-oliva">
             <span className="h-1.5 w-1.5 rounded-full bg-limao-500" />

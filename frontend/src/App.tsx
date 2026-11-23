@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { auth } from './lib/api';
 import { Layout } from './components/Layout';
 import Login from './pages/Login';
+import Cadastro from './pages/Cadastro';
 import Painel from './pages/Painel';
 import Devedores from './pages/Devedores';
 import Clientes from './pages/Clientes';
@@ -19,6 +20,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/cadastro" element={<Cadastro />} />
       <Route
         element={
           <Protegida>

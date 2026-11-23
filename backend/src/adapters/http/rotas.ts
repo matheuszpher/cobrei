@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../../infra/prisma';
 import { JWT_SECRET } from '../../infra/container';
+import { comLoja } from '../../infra/lojaAtual';
 import { ErroDeNegocio } from '../../domain/fiado';
 import * as uc from '../../application/usecases/fiado';
 
@@ -33,23 +34,48 @@ const pagamentoSchema = z.object({
 
 rotas.get('/health', (_req, res) => { res.json({ status: 'ok' }); });
 
+const cadastroSchema = z.object({
+  nomeLoja: z.string().trim().min(2, 'Nome da loja muito curto').max(80, 'Nome da loja muito longo'),
+  nome: z.string().trim().min(2, 'Nome muito curto').max(80, 'Nome muito longo'),
+  email: z.string().trim().toLowerCase().email('E-mail inválido').max(254, 'E-mail muito longo'),
+  senha: z.string().min(8, 'A senha precisa ter no mínimo 8 caracteres').max(72, 'A senha pode ter no máximo 72 caracteres'),
+});
+
+const sessao = (u: { id: number; nome: string; nomeLoja: string; email: string }) => ({
+  token: jwt.sign({ sub: String(u.id), nome: u.nome }, JWT_SECRET, { expiresIn: '8h' }),
+  usuario: { id: u.id, nome: u.nome, nomeLoja: u.nomeLoja, email: u.email },
+});
+
+rotas.post('/auth/cadastro', async (req, res) => {
+  const { senha, ...dados } = cadastroSchema.parse(req.body);
+  try {
+    const u = await prisma.usuario.create({ data: { ...dados, senhaHash: await bcrypt.hash(senha, 10) } });
+    res.status(201).json(sessao(u));
+  } catch (erro) {
+    if ((erro as { code?: string }).code === 'P2002') throw new ErroDeNegocio(409, 'Já existe uma conta com este e-mail');
+    throw erro;
+  }
+});
+
 rotas.post('/auth/login', async (req, res) => {
-  const { email, senha } = z.object({ email: z.string(), senha: z.string() }).parse(req.body);
+  const { email, senha } = z.object({ email: z.string().trim().toLowerCase(), senha: z.string() }).parse(req.body);
   const u = await prisma.usuario.findUnique({ where: { email } });
   if (!u || !(await bcrypt.compare(senha, u.senhaHash))) throw new ErroDeNegocio(401, 'E-mail ou senha inválidos');
-  const token = jwt.sign({ sub: u.id, nome: u.nome }, JWT_SECRET, { expiresIn: '8h' });
-  res.json({ token, usuario: { id: u.id, nome: u.nome, email: u.email } });
+  res.json(sessao(u));
 });
 
 // Daqui para baixo, só com token.
 rotas.use((req: Request, _res: Response, next: NextFunction) => {
   const [, token] = (req.headers.authorization ?? '').split(' ');
+  let usuarioId: number;
   try {
-    jwt.verify(token ?? '', JWT_SECRET);
-    next();
+    usuarioId = Number((jwt.verify(token ?? '', JWT_SECRET) as jwt.JwtPayload).sub);
+    if (!Number.isInteger(usuarioId)) throw new Error('Token sem usuário');
   } catch {
     next(new ErroDeNegocio(401, 'Sessão expirada, faça login novamente'));
+    return;
   }
+  comLoja(usuarioId, next);
 });
 
 rotas.get('/clientes', async (req, res) => { res.json(await uc.listarClientes(req.query.busca as string | undefined)); });

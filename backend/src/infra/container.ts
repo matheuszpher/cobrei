@@ -4,7 +4,6 @@ import { WhatsAppLinkNotificador } from '../adapters/notificacao/WhatsAppLinkNot
 // Composição: aqui se escolhem os adaptadores concretos de cada porta.
 export const relogio: Relogio = { agora: () => new Date() };
 export const notificador: Notificador = new WhatsAppLinkNotificador();
-export const NOME_LOJA = process.env.NOME_LOJA ?? 'Mercadinho Bom Preço';
 
 function segredoJwt(): string {
   const segredo = process.env.JWT_SECRET;

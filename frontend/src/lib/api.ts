@@ -2,7 +2,7 @@ export const API_URL: string = import.meta.env.VITE_API_URL || 'http://localhost
 const TOKEN_KEY = 'fiado_token';
 const USER_KEY = 'fiado_usuario';
 
-export interface Usuario { id: number | string; nome: string; email: string }
+export interface Usuario { id: number | string; nome: string; nomeLoja?: string; email: string }
 
 export const auth = {
   getToken: () => localStorage.getItem(TOKEN_KEY),
