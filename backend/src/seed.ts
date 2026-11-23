@@ -4,13 +4,20 @@ import { prisma } from './infra/prisma';
 
 const diasAtras = (d: number) => new Date(Date.now() - d * 86400000);
 
+function senhaAdmin(): string {
+  const senha = process.env.ADMIN_SENHA;
+  if (senha) return senha;
+  if (process.env.NODE_ENV === 'production') throw new Error('Defina ADMIN_SENHA em produção.');
+  return '123456';
+}
+
 async function main() {
   if (await prisma.usuario.count()) {
     console.log('[seed] banco já populado, nada a fazer');
     return;
   }
   await prisma.usuario.create({
-    data: { nome: 'Dona Maria', email: 'admin@fiado.com', senhaHash: await bcrypt.hash('123456', 10) },
+    data: { nome: 'Dona Maria', email: 'admin@fiado.com', senhaHash: await bcrypt.hash(senhaAdmin(), 10) },
   });
 
   const clientes = await Promise.all(

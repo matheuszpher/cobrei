@@ -42,6 +42,12 @@ cd backend && npm install && npx prisma migrate deploy && npm run build && npm r
 cd frontend && npm install && npm run dev
 ```
 
+
+## Deploy
+Produção no Render, com banco PostgreSQL no Neon. O arquivo `render.yaml` cria um único serviço: a API aplica as migrations ao subir e serve o site no mesmo endereço.
+
+No Render, informe em `DATABASE_URL` a conexão direta do Neon (sem `-pooler` no host). `JWT_SECRET` e `ADMIN_SENHA` são gerados pelo próprio Render. O login de produção usa `admin@fiado.com` e o valor de `ADMIN_SENHA`.
+
 ## Estilo arquitetural
 Backend em **Arquitetura Hexagonal leve** (Ports and Adapters):
 

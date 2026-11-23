@@ -5,4 +5,12 @@ import { WhatsAppLinkNotificador } from '../adapters/notificacao/WhatsAppLinkNot
 export const relogio: Relogio = { agora: () => new Date() };
 export const notificador: Notificador = new WhatsAppLinkNotificador();
 export const NOME_LOJA = process.env.NOME_LOJA ?? 'Mercadinho Bom Preço';
-export const JWT_SECRET = process.env.JWT_SECRET ?? 'segredo-local';
+
+function segredoJwt(): string {
+  const segredo = process.env.JWT_SECRET;
+  if (segredo) return segredo;
+  if (process.env.NODE_ENV === 'production') throw new Error('Defina JWT_SECRET em produção.');
+  return 'segredo-local';
+}
+
+export const JWT_SECRET = segredoJwt();

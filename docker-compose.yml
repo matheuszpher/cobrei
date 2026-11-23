@@ -25,6 +25,8 @@ services:
       JWT_SECRET: troque-este-segredo-em-producao
       NOME_LOJA: Mercadinho Bom Preço
       PORT: 3333
+      JWT_SECRET: segredo-apenas-local
+      ADMIN_SENHA: "123456"
     ports:
       - "3333:3333"
     depends_on:
