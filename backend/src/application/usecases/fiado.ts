@@ -1,5 +1,5 @@
 // Casos de uso do fiado: clientes, vendas, pagamentos, devedores, cobrança e painel.
-import { prisma, vendaRepo, clienteRepo, produtoRepo, n, VendaCompleta, vendaInclude } from '../../adapters/persistence/repositorios';
+import { prisma, vendaRepo, clienteRepo, n, VendaCompleta, vendaInclude } from '../../adapters/persistence/repositorios';
 import { arred, cabeNoLimite, diasDeAtraso, ErroDeNegocio, faixaDeAtraso, mensagemDeCobranca, nivelDeAtraso, statusDaVenda } from '../../domain/fiado';
 import { relogio, notificador, NOME_LOJA } from '../../infra/container';
 
@@ -10,12 +10,8 @@ export function mapVenda(v: VendaCompleta) {
   const status = statusDaVenda(total, valorPago);
   return {
     id: v.id, clienteId: v.clienteId, cliente: v.cliente, data: v.data, vencimento: v.vencimento,
-    total, valorPago, saldo, status,
+    total, valorPago, saldo, status, descricao: v.descricao,
     diasAtraso: status === 'QUITADA' ? 0 : diasDeAtraso(v.vencimento, relogio.agora()),
-    itens: v.itens.map((i) => ({
-      id: i.id, produtoId: i.produtoId, produto: i.produto, quantidade: i.quantidade,
-      precoUnitario: n(i.precoUnitario), subtotal: arred(n(i.precoUnitario) * i.quantidade),
-    })),
   };
 }
 
@@ -66,22 +62,6 @@ export async function excluirCliente(id: number) {
   ]);
 }
 
-// ---------- Produtos ----------
-const mapProd = (p: any) => ({ ...p, preco: n(p.preco) });
-export const listarProdutos = async (busca?: string) => (await produtoRepo.listar(busca)).map(mapProd);
-export const criarProduto = async (d: any) => mapProd(await produtoRepo.criar(d));
-export async function atualizarProduto(id: number, d: any) {
-  if (!(await produtoRepo.buscar(id))) throw new ErroDeNegocio(404, 'Produto não encontrado');
-  return mapProd(await produtoRepo.atualizar(id, d));
-}
-export async function excluirProduto(id: number) {
-  if (!(await produtoRepo.buscar(id))) throw new ErroDeNegocio(404, 'Produto não encontrado');
-  if (await prisma.itemVenda.count({ where: { produtoId: id } })) {
-    throw new ErroDeNegocio(409, 'Produto já usado em vendas não pode ser excluído');
-  }
-  await produtoRepo.excluir(id);
-}
-
 // ---------- Vendas ----------
 export async function listarVendas(f: { status?: string; clienteId?: number }) {
   const vendas = (await vendaRepo.listar({ clienteId: f.clienteId })).map(mapVenda);
@@ -94,33 +74,19 @@ export async function detalharVenda(id: number) {
   return mapVenda(v);
 }
 
-export async function registrarVenda(dados: { clienteId: number; vencimento: Date; itens: { produtoId: number; quantidade: number }[] }) {
+export async function registrarVenda(dados: { clienteId: number; vencimento: Date; valor: number; descricao?: string | null }) {
   const cliente = await clienteRepo.buscar(dados.clienteId);
   if (!cliente) throw new ErroDeNegocio(404, 'Cliente não encontrado');
-  if (!dados.itens.length) throw new ErroDeNegocio(400, 'A venda precisa de pelo menos um item');
-
-  const itens: { produtoId: number; quantidade: number; precoUnitario: number }[] = [];
-  for (const it of dados.itens) {
-    const p = await produtoRepo.buscar(it.produtoId);
-    if (!p) throw new ErroDeNegocio(404, `Produto ${it.produtoId} não encontrado`);
-    if (p.estoque < it.quantidade) throw new ErroDeNegocio(409, `Estoque insuficiente de ${p.nome} (disponível: ${p.estoque})`);
-    itens.push({ produtoId: p.id, quantidade: it.quantidade, precoUnitario: n(p.preco) });
-  }
-  const total = arred(itens.reduce((s, i) => s + i.precoUnitario * i.quantidade, 0));
+  const total = arred(dados.valor);
   const saldo = await saldoDoCliente(cliente.id);
   const limite = n(cliente.limiteCredito);
   if (!cabeNoLimite(saldo, total, limite)) {
     throw new ErroDeNegocio(409, `Limite de crédito excedido: saldo R$ ${saldo.toFixed(2)} + compra R$ ${total.toFixed(2)} passa do limite de R$ ${limite.toFixed(2)}`);
   }
 
-  const venda = await prisma.$transaction(async (tx) => {
-    for (const i of itens) {
-      await tx.produto.update({ where: { id: i.produtoId }, data: { estoque: { decrement: i.quantidade } } });
-    }
-    return tx.venda.create({
-      data: { clienteId: cliente.id, vencimento: dados.vencimento, total, itens: { create: itens } },
-      include: vendaInclude,
-    });
+  const venda = await prisma.venda.create({
+    data: { clienteId: cliente.id, vencimento: dados.vencimento, total, descricao: dados.descricao || null },
+    include: vendaInclude,
   });
   return mapVenda(venda);
 }
@@ -129,12 +95,7 @@ export async function cancelarVenda(id: number) {
   const v = await vendaRepo.buscar(id);
   if (!v) throw new ErroDeNegocio(404, 'Venda não encontrada');
   if (v.pagamentos.length) throw new ErroDeNegocio(409, 'Venda com pagamento registrado não pode ser cancelada');
-  await prisma.$transaction(async (tx) => {
-    for (const i of v.itens) {
-      await tx.produto.update({ where: { id: i.produtoId }, data: { estoque: { increment: i.quantidade } } });
-    }
-    await tx.venda.delete({ where: { id } });
-  });
+  await prisma.venda.delete({ where: { id } });
 }
 
 // ---------- Pagamentos ----------

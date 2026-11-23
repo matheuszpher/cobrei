@@ -40,15 +40,6 @@ model Cliente {
   notificacoes  Notificacao[]
 }
 
-model Produto {
-  id       Int         @id @default(autoincrement())
-  nome     String
-  preco    Decimal     @db.Decimal(10, 2)
-  estoque  Int         @default(0)
-  criadoEm DateTime    @default(now())
-  itens    ItemVenda[]
-}
-
 model Venda {
   id         Int         @id @default(autoincrement())
   clienteId  Int
@@ -56,18 +47,8 @@ model Venda {
   data       DateTime    @default(now())
   vencimento DateTime
   total      Decimal     @db.Decimal(10, 2)
-  itens      ItemVenda[]
+  descricao  String?
   pagamentos Pagamento[]
-}
-
-model ItemVenda {
-  id            Int     @id @default(autoincrement())
-  vendaId       Int
-  venda         Venda   @relation(fields: [vendaId], references: [id], onDelete: Cascade)
-  produtoId     Int
-  produto       Produto @relation(fields: [produtoId], references: [id])
-  quantidade    Int
-  precoUnitario Decimal @db.Decimal(10, 2)
 }
 
 model Pagamento {

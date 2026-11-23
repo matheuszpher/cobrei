@@ -19,15 +19,11 @@ const clienteSchema = z.object({
   limiteCredito: z.coerce.number().min(0),
   observacao: z.string().optional().nullable(),
 });
-const produtoSchema = z.object({
-  nome: z.string().min(2, 'Nome muito curto'),
-  preco: z.coerce.number().positive('Preço deve ser positivo'),
-  estoque: z.coerce.number().int().min(0),
-});
 const vendaSchema = z.object({
   clienteId: z.coerce.number().int(),
   vencimento: z.coerce.date(),
-  itens: z.array(z.object({ produtoId: z.coerce.number().int(), quantidade: z.coerce.number().int().positive() })).min(1, 'Adicione pelo menos um item'),
+  valor: z.coerce.number().min(0.01, 'Valor deve ser de pelo menos R$ 0,01').max(99999999.99, 'Valor muito alto'),
+  descricao: z.string().trim().max(200, 'Descrição muito longa').optional().nullable(),
 });
 const pagamentoSchema = z.object({
   vendaId: z.coerce.number().int(),
@@ -61,11 +57,6 @@ rotas.get('/clientes/:id', async (req, res) => { res.json(await uc.detalharClien
 rotas.post('/clientes', async (req, res) => { res.status(201).json(await uc.criarCliente(clienteSchema.parse(req.body))); });
 rotas.put('/clientes/:id', async (req, res) => { res.json(await uc.atualizarCliente(id(req), clienteSchema.partial().parse(req.body))); });
 rotas.delete('/clientes/:id', async (req, res) => { await uc.excluirCliente(id(req)); res.status(204).end(); });
-
-rotas.get('/produtos', async (req, res) => { res.json(await uc.listarProdutos(req.query.busca as string | undefined)); });
-rotas.post('/produtos', async (req, res) => { res.status(201).json(await uc.criarProduto(produtoSchema.parse(req.body))); });
-rotas.put('/produtos/:id', async (req, res) => { res.json(await uc.atualizarProduto(id(req), produtoSchema.partial().parse(req.body))); });
-rotas.delete('/produtos/:id', async (req, res) => { await uc.excluirProduto(id(req)); res.status(204).end(); });
 
 rotas.get('/vendas', async (req, res) => {
   res.json(await uc.listarVendas({
