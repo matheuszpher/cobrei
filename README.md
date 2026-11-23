@@ -66,3 +66,8 @@ Decisões registradas em [`docs/decisoes`](docs/decisoes) (ADR-001 a ADR-007).
 
 ## Stack
 React + Vite + TypeScript + Tailwind (frontend), Node.js + Express + TypeScript + Prisma (backend), PostgreSQL 16, Docker Compose.
+
+## Desenvolvedores
+- [Matheus Rodrigues](https://github.com/matheuszpher)
+- [GuilhermeNobre5](https://github.com/GuilhermeNobre5)
+- [Felipeoliveiraaraujo](https://github.com/Felipeoliveiraaraujo)
