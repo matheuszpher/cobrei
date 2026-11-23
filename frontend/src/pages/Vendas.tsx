@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { AlertTriangle, Ban, ChevronDown, ChevronRight, HandCoins, Plus, Receipt } from 'lucide-react';
+import { AlertTriangle, Ban, HandCoins, Plus, Receipt } from 'lucide-react';
 import { api, erroMsg, qs } from '../lib/api';
 import { useApi } from '../lib/useApi';
 import { StatusVenda, Venda } from '../lib/types';
@@ -26,7 +26,6 @@ export default function Vendas() {
   const [params, setParams] = useSearchParams();
   const [status, setStatus] = useState<StatusVenda | ''>('');
   const { data, loading, error, reload } = useApi<Venda[]>(`/vendas${qs({ status })}`);
-  const [expandida, setExpandida] = useState<string | null>(null);
   const [nova, setNova] = useState(false);
   const [pagar, setPagar] = useState<Venda | null>(null);
   const [cancelar, setCancelar] = useState<Venda | null>(null);
@@ -45,7 +44,7 @@ export default function Vendas() {
     setCancelando(true);
     try {
       await api.del(`/vendas/${cancelar.id}`);
-      toast.sucesso('Venda cancelada', 'O estoque dos produtos foi devolvido.');
+      toast.sucesso('Venda cancelada', 'O valor saiu do saldo do cliente.');
       setCancelar(null);
       reload();
     } catch (e) {
@@ -55,15 +54,7 @@ export default function Vendas() {
     }
   }
 
-  const toggle = (v: Venda) => setExpandida((e) => (e === String(v.id) ? null : String(v.id)));
-
   const columns: Column<Venda>[] = [
-    {
-      key: 'exp',
-      header: '',
-      className: 'w-8 !pr-0',
-      render: (v) => (expandida === String(v.id) ? <ChevronDown className="h-4 w-4 text-slate-400" /> : <ChevronRight className="h-4 w-4 text-slate-400" />),
-    },
     {
       key: 'venda',
       header: 'Venda',
@@ -71,6 +62,7 @@ export default function Vendas() {
         <div>
           <p className="font-medium text-slate-900">#{v.id}</p>
           <p className="text-xs text-slate-500">{fData(v.data)}</p>
+          {v.descricao && <p className="mt-0.5 max-w-xs truncate text-xs text-slate-600" title={v.descricao}>{v.descricao}</p>}
         </div>
       ),
     },
@@ -146,40 +138,6 @@ export default function Vendas() {
           rows={data ?? []}
           rowKey={(v) => String(v.id)}
           loading={loading}
-          onRowClick={toggle}
-          isExpanded={(v) => expandida === String(v.id)}
-          renderExpanded={(v) => (
-            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-              <table className="min-w-full text-sm">
-                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                  <tr>
-                    <th className="px-4 py-2 text-left font-semibold">Produto</th>
-                    <th className="px-4 py-2 text-center font-semibold">Qtd.</th>
-                    <th className="px-4 py-2 text-right font-semibold">Preço unit.</th>
-                    <th className="px-4 py-2 text-right font-semibold">Subtotal</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {(v.itens ?? []).map((i) => (
-                    <tr key={String(i.id)}>
-                      <td className="px-4 py-2 text-slate-800">{i.produto?.nome}</td>
-                      <td className="px-4 py-2 text-center">{i.quantidade}</td>
-                      <td className="px-4 py-2 text-right">{moeda(i.precoUnitario)}</td>
-                      <td className="px-4 py-2 text-right font-medium">{moeda(i.subtotal)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot className="bg-slate-50 text-sm">
-                  <tr>
-                    <td colSpan={3} className="px-4 py-2 text-right text-slate-500">
-                      Total {moeda(v.total)} · Pago <span className="text-emerald-600">{moeda(v.valorPago)}</span> · Saldo
-                    </td>
-                    <td className="px-4 py-2 text-right font-bold text-slate-900">{moeda(v.saldo)}</td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          )}
           empty={
             <EmptyState
               icon={<Receipt className="h-6 w-6" />}
@@ -203,7 +161,7 @@ export default function Vendas() {
         message={
           <>
             Cancelar a venda <strong className="text-slate-900">#{cancelar?.id}</strong> de {cancelar?.cliente?.nome} no valor de{' '}
-            <strong className="text-slate-900">{moeda(cancelar?.total)}</strong>? Os produtos voltam para o estoque.
+            <strong className="text-slate-900">{moeda(cancelar?.total)}</strong>? O valor sai do saldo do cliente.
           </>
         }
       />

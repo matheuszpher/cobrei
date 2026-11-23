@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { AlarmClock, ChevronDown, History, LayoutDashboard, LogOut, Menu, Package, ShoppingBag, Users, X } from 'lucide-react';
+import { AlarmClock, ChevronDown, History, LayoutDashboard, LogOut, Menu, ShoppingBag, Users, X } from 'lucide-react';
 import { auth } from '../lib/api';
 import { Logo } from './ui';
 
@@ -9,7 +9,6 @@ const links = [
   { to: '/devedores', label: 'Devedores', icon: AlarmClock },
   { to: '/vendas', label: 'Vendas', icon: ShoppingBag },
   { to: '/clientes', label: 'Clientes', icon: Users },
-  { to: '/produtos', label: 'Produtos', icon: Package },
   { to: '/cobrancas', label: 'Cobranças', icon: History },
 ];
 

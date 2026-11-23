@@ -106,7 +106,7 @@ export default function ClienteDetalhe() {
                     </p>
                     <p className="truncate text-xs text-slate-500">
                       Vence {fData(v.vencimento)}
-                      {v.itens?.length ? ` · ${v.itens.map((i) => `${i.quantidade}x ${i.produto?.nome}`).join(', ')}` : ''}
+                      {v.descricao ? ` · ${v.descricao}` : ''}
                     </p>
                   </div>
                   <StatusBadge status={v.status} atrasada={v.diasAtraso > 0} />

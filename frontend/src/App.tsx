@@ -7,7 +7,6 @@ import Painel from './pages/Painel';
 import Devedores from './pages/Devedores';
 import Clientes from './pages/Clientes';
 import ClienteDetalhe from './pages/ClienteDetalhe';
-import Produtos from './pages/Produtos';
 import Vendas from './pages/Vendas';
 import Cobrancas from './pages/Cobrancas';
 
@@ -31,7 +30,6 @@ export default function App() {
         <Route path="/devedores" element={<Devedores />} />
         <Route path="/clientes" element={<Clientes />} />
         <Route path="/clientes/:id" element={<ClienteDetalhe />} />
-        <Route path="/produtos" element={<Produtos />} />
         <Route path="/vendas" element={<Vendas />} />
         <Route path="/cobrancas" element={<Cobrancas />} />
       </Route>

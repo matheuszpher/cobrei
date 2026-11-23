@@ -4,12 +4,10 @@ export interface Cliente {
   id: ID; nome: string; telefone: string; email: string | null; endereco: string | null;
   limiteCredito: number; observacao: string | null; criadoEm: string; saldoDevedor: number;
 }
-export interface Produto { id: ID; nome: string; preco: number; estoque: number; criadoEm: string }
 export type StatusVenda = 'ABERTA' | 'PARCIAL' | 'QUITADA';
-export interface ItemVenda { id: ID; produtoId: ID; produto: { nome: string }; quantidade: number; precoUnitario: number; subtotal: number }
 export interface Venda {
   id: ID; clienteId: ID; cliente: { id: ID; nome: string }; data: string; vencimento: string;
-  total: number; valorPago: number; saldo: number; status: StatusVenda; diasAtraso: number; itens: ItemVenda[];
+  total: number; valorPago: number; saldo: number; status: StatusVenda; diasAtraso: number; descricao: string | null;
 }
 export type FormaPagamento = 'DINHEIRO' | 'PIX' | 'CARTAO';
 export interface Pagamento { id: ID; vendaId: ID; clienteId: ID; cliente: { nome: string }; valor: number; forma: FormaPagamento; data: string }
