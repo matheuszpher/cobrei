@@ -8,8 +8,8 @@ import { Logo } from '../components/ui';
 
 export default function Login() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('admin@fiado.com');
-  const [senha, setSenha] = useState('123456');
+  const [email, setEmail] = useState(import.meta.env.DEV ? 'admin@fiado.com' : '');
+  const [senha, setSenha] = useState(import.meta.env.DEV ? '123456' : '');
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState('');
 
@@ -98,10 +98,12 @@ export default function Login() {
               Entrar
             </Button>
           </form>
+          {import.meta.env.DEV && (
           <div className="mt-8 flex items-center gap-2 rounded-full border border-borda bg-white px-4 py-2.5 text-xs text-oliva">
             <span className="h-1.5 w-1.5 rounded-full bg-limao-500" />
             Demonstração: <strong className="font-medium text-floresta">admin@fiado.com</strong> / 123456
           </div>
+          )}
         </div>
       </div>
     </div>
