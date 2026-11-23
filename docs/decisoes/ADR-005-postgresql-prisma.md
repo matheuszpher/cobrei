@@ -5,17 +5,17 @@
 **Responsável:** Equipe
 
 ## Contexto
-O sistema trata dinheiro, estoque e relações bem definidas entre clientes, produtos, vendas, itens, pagamentos e notificações. Operações como registrar uma venda (gravar venda e itens, baixar estoque) e cancelá-la (devolver estoque) precisam ser atômicas. Também são necessárias consultas agregadas (saldo por cliente, vendas em aberto, painel por mês).
+O sistema trata dinheiro e relações bem definidas entre clientes, vendas, pagamentos e notificações. Operações como excluir um cliente (com suas vendas e pagamentos) precisam ser atômicas. Também são necessárias consultas agregadas (saldo por cliente, vendas em aberto, painel por mês).
 
 ## Decisão
 Usar **PostgreSQL** como banco de dados relacional e **Prisma** como ORM e ferramenta de migrações:
 
-- O modelo de dados é: Usuario, Cliente, Produto, Venda, ItemVenda, Pagamento e Notificacao (ver diagrama ER em [`docs/c4/diagramas.md`](../c4/diagramas.md)).
-- O schema fica em `schema.prisma`, e as migrações e a carga inicial (usuário de demonstração, clientes, produtos e vendas de exemplo) são aplicadas na subida da API.
+- O modelo de dados é: Usuario, Cliente, Venda, Pagamento e Notificacao (ver diagrama ER em [`docs/c4/diagramas.md`](../c4/diagramas.md)).
+- O schema fica em `schema.prisma`, e as migrações e a carga inicial (usuário de demonstração, clientes e vendas de exemplo) são aplicadas na subida da API.
 - Valores monetários usam tipo decimal, e nunca ponto flutuante.
 - O **saldo não é armazenado**: é derivado das vendas e dos pagamentos pelo domínio, o que evita inconsistências. O status da venda é gravado para permitir filtros simples e é recalculado a cada pagamento.
 - O Prisma fica restrito aos adaptadores de persistência, que implementam as portas de repositório da camada de aplicação. Operações compostas usam transações (`$transaction`).
-- O preço unitário é copiado para o `ItemVenda` no momento da venda.
+- A venda guarda apenas o valor total e uma descrição opcional, sem catálogo de produtos nem controle de estoque.
 
 ## Alternativas consideradas
 - **SQLite:** mais simples de executar, mas menos representativo de um ambiente real e com limitações de tipos e concorrência.
@@ -24,7 +24,7 @@ Usar **PostgreSQL** como banco de dados relacional e **Prisma** como ORM e ferra
 
 ## Consequências
 **Positivas**
-- Integridade referencial e transações garantem a consistência de venda, itens e estoque.
+- Integridade referencial e transações garantem a consistência de vendas e pagamentos.
 - Tipos gerados pelo Prisma reduzem erros entre o banco e o código.
 - Migrações versionadas tornam o ambiente reproduzível.
 

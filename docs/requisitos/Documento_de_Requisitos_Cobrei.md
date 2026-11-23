@@ -14,7 +14,7 @@
 Este documento descreve os requisitos do Cobrei, sistema desenvolvido como trabalho final da disciplina. Ele define o problema, os objetivos, os atores, as funcionalidades, os requisitos não funcionais, as regras de negócio e o escopo da implementação parcial. O contrato da API está em [`../API.md`](../API.md) e as decisões arquiteturais em [`../decisoes`](../decisoes).
 
 ### 1.2 Visão geral do sistema
-O Cobrei substitui o caderninho de papel de mercadinhos e padarias. O lojista cadastra clientes (com limite de crédito) e produtos, registra vendas fiado com data de vencimento e anota os pagamentos, parciais ou totais. A função central do sistema é mostrar quais clientes estão devendo há mais tempo, ordenados pelos dias de atraso do vencimento mais antigo em aberto, e gerar a cobrança por WhatsApp com uma mensagem pronta. Um painel resume os indicadores da carteira de fiado.
+O Cobrei substitui o caderninho de papel de mercadinhos e padarias. O lojista cadastra clientes (com limite de crédito), registra vendas fiado com valor, descrição opcional e data de vencimento e anota os pagamentos, parciais ou totais. A função central do sistema é mostrar quais clientes estão devendo há mais tempo, ordenados pelos dias de atraso do vencimento mais antigo em aberto, e gerar a cobrança por WhatsApp com uma mensagem pronta. Um painel resume os indicadores da carteira de fiado.
 
 ### 1.3 Escopo
 O escopo completo está documentado neste documento. A implementação parcial cobre os requisitos RF01 a RF08, de forma a demonstrar o fluxo principal (vender fiado, receber, identificar devedores e cobrar) e a adoção real da Arquitetura Hexagonal. Os requisitos RF09 e RF10 ficam apenas documentados.
@@ -53,7 +53,7 @@ O fiado é uma prática comum no pequeno comércio de bairro: o cliente leva a m
 |---|---|---|---|
 | RF01 | Autenticação do lojista (JWT) | Essencial | Implementação |
 | RF02 | Cadastro de clientes com limite de crédito | Essencial | Implementação |
-| RF03 | Cadastro de produtos e estoque | Essencial | Implementação |
+| RF03 | Produtos e estoque | Removido | Fora do escopo |
 | RF04 | Registro e cancelamento de vendas fiado | Essencial | Implementação |
 | RF05 | Registro de pagamentos parciais ou totais | Essencial | Implementação |
 | RF06 | Ranking de devedores por tempo de atraso | Essencial | Implementação |
@@ -82,23 +82,18 @@ O fiado é uma prática comum no pequeno comércio de bairro: o cliente leva a m
 - A listagem aceita busca por nome e exibe o saldo devedor de cada cliente.
 - Um cliente com saldo devedor não pode ser excluído (RN04).
 
-### RF03: Cadastro de produtos e estoque
-**Ator:** Lojista
-**Prioridade:** Essencial | **Escopo:** Implementação
-**Descrição:** O lojista deve cadastrar, editar, buscar e excluir produtos, informando nome, preço e quantidade em estoque.
-**Critérios de aceitação:**
-- O preço deve ser maior que zero e o estoque não pode ser negativo.
-- O estoque é baixado a cada venda e devolvido quando a venda é cancelada.
+### RF03: Produtos e estoque (removido)
+Requisito retirado do escopo: o foco do Cobrei é registrar e cobrar o fiado, não controlar mercadorias. A venda passou a guardar valor e descrição opcional.
 
 ### RF04: Registro e cancelamento de vendas fiado
 **Ator:** Lojista
 **Prioridade:** Essencial | **Escopo:** Implementação
-**Descrição:** O lojista deve registrar uma venda fiado para um cliente, informando a data de vencimento e os itens (produto e quantidade). O total é calculado pelo sistema a partir dos preços vigentes, que são gravados em cada item. A venda pode ser consultada, filtrada por status (ABERTA, PARCIAL, QUITADA) e por cliente, e cancelada.
+**Descrição:** O lojista deve registrar uma venda fiado para um cliente, informando o valor, a data de vencimento e, se quiser, uma descrição do que foi comprado. A venda pode ser consultada, filtrada por status (ABERTA, PARCIAL, QUITADA) e por cliente, e cancelada.
 **Critérios de aceitação:**
 - A venda é recusada com erro 409 se o saldo devedor do cliente somado ao total da venda ultrapassar o limite de crédito (RN01).
-- A venda é recusada com erro 409 se algum produto não tiver estoque suficiente.
-- Toda venda nasce com status ABERTA e o estoque dos itens é baixado.
-- O cancelamento só é permitido se a venda não tiver pagamento e devolve o estoque (RN05).
+- O valor deve ser maior que zero.
+- Toda venda nasce com status ABERTA.
+- O cancelamento só é permitido se a venda não tiver pagamento (RN05).
 
 ### RF05: Registro de pagamentos parciais ou totais
 **Ator:** Lojista
@@ -144,7 +139,7 @@ O fiado é uma prática comum no pequeno comércio de bairro: o cliente leva a m
 ### RF10: Multiusuário e multiloja
 **Ator:** Lojista, Administrador
 **Prioridade:** Opcional | **Escopo:** Somente documentação
-**Descrição:** O sistema passaria a atender vários comércios, cada um com seus clientes, produtos e vendas isolados, e vários usuários por comércio (dono e funcionário) com perfis de acesso diferentes. Exigiria a entidade Loja, a inclusão da loja no token e em todas as consultas e o cadastro de usuários. Não será implementado nesta versão, que atende a um único lojista.
+**Descrição:** O sistema passaria a atender vários comércios, cada um com seus clientes e vendas isolados, e vários usuários por comércio (dono e funcionário) com perfis de acesso diferentes. Exigiria a entidade Loja, a inclusão da loja no token e em todas as consultas e o cadastro de usuários. Não será implementado nesta versão, que atende a um único lojista.
 
 ## 7. Requisitos não funcionais
 
@@ -157,7 +152,7 @@ O fiado é uma prática comum no pequeno comércio de bairro: o cliente leva a m
 | RNF05 | Usabilidade | Interface simples e responsiva, adequada a usuários sem experiência técnica, com a lista de devedores a poucos cliques. |
 | RNF06 | Desempenho | As listagens e o painel devem responder em até 2 segundos para até 500 clientes e 10 mil vendas. |
 | RNF07 | Portabilidade | O sistema sobe com um único comando (`docker compose up`), com três serviços: db, api e web. |
-| RNF08 | Integridade | Valores monetários e estoque são gravados em transação; o saldo é sempre derivado de vendas e pagamentos, nunca armazenado. |
+| RNF08 | Integridade | Valores monetários usam tipo decimal; o saldo é sempre derivado de vendas e pagamentos, nunca armazenado. |
 | RNF09 | Contrato | A API é REST/JSON conforme `docs/API.md`, com erros no formato `{ "erro": "mensagem" }` (ADR-003). |
 | RNF10 | Privacidade | Dados pessoais (nome e telefone dos clientes) ficam apenas no banco do lojista, e nada é enviado a terceiros pelo sistema. |
 
@@ -169,10 +164,10 @@ O fiado é uma prática comum no pequeno comércio de bairro: o cliente leva a m
 | RN02 | **Nível de atraso.** Os dias de atraso de um cliente são os dias entre a data de hoje e o vencimento mais antigo entre suas vendas em aberto (ABERTA ou PARCIAL), ou 0 se nenhuma estiver vencida. EM_DIA = 0; ATENCAO = 1 a 30; CRITICO = mais de 30. |
 | RN03 | **Pagamento não excede o saldo.** O valor de um pagamento deve ser maior que zero e menor ou igual ao saldo da venda (total menos o já pago). |
 | RN04 | **Cliente com saldo não é excluído.** A exclusão é recusada (409) enquanto houver saldo devedor. |
-| RN05 | **Cancelamento de venda.** Só é possível cancelar uma venda sem pagamentos; o cancelamento devolve o estoque dos itens. Com pagamento, a operação é recusada (409). |
+| RN05 | **Cancelamento de venda.** Só é possível cancelar uma venda sem pagamentos. Com pagamento, a operação é recusada (409). |
 | RN06 | **Status da venda.** ABERTA: nenhum pagamento. PARCIAL: pagamento menor que o total. QUITADA: pagamento igual ao total. |
-| RN07 | **Preço congelado.** O preço unitário do produto no momento da venda é gravado no item e não muda se o produto for reajustado depois. |
-| RN08 | **Estoque.** A venda baixa o estoque; não é permitida venda com quantidade acima do estoque disponível (409). |
+| RN07 | **Removida.** Regra de preço congelado, que deixou de existir com a retirada de produtos. |
+| RN08 | **Removida.** Regra de estoque, fora do escopo do Cobrei. |
 | RN09 | **Vencimento.** O vencimento deve ser informado e não pode ser anterior à data da venda. |
 | RN10 | **Cobrança.** Só é possível gerar cobrança para cliente com saldo em aberto; cada geração fica registrada no histórico, e o envio é sempre feito pelo lojista. |
 
@@ -190,18 +185,15 @@ O fiado é uma prática comum no pequeno comércio de bairro: o cliente leva a m
 | UC08 | Consultar painel | RF08 |
 
 ### UC03: Registrar venda fiado
-**Ator:** Lojista. **Pré-condição:** lojista autenticado, cliente e produtos cadastrados.
+**Ator:** Lojista. **Pré-condição:** lojista autenticado, cliente cadastrado.
 **Fluxo principal:**
-1. O lojista escolhe o cliente, informa o vencimento e adiciona os itens (produto e quantidade).
-2. O sistema busca os produtos e calcula o total com os preços vigentes.
-3. O sistema calcula o saldo devedor do cliente e valida o limite de crédito (RN01).
-4. O sistema valida o estoque de cada item (RN08).
-5. O sistema grava a venda com status ABERTA, grava os itens com o preço congelado e baixa o estoque, em uma transação.
-6. O sistema devolve a venda criada.
+1. O lojista escolhe o cliente e informa o valor, o vencimento e, se quiser, uma descrição.
+2. O sistema calcula o saldo devedor do cliente e valida o limite de crédito (RN01).
+3. O sistema grava a venda com status ABERTA.
+4. O sistema devolve a venda criada.
 
 **Fluxos alternativos:**
-- 3a. O limite seria ultrapassado: o sistema retorna erro 409 e nada é gravado.
-- 4a. Estoque insuficiente: o sistema retorna erro 409 e nada é gravado.
+- 2a. O limite seria ultrapassado: o sistema retorna erro 409 e nada é gravado.
 
 ### UC04: Registrar pagamento
 **Ator:** Lojista. **Pré-condição:** existe venda com saldo em aberto.
@@ -240,7 +232,7 @@ O fiado é uma prática comum no pequeno comércio de bairro: o cliente leva a m
 **Fluxo principal:**
 1. O lojista solicita o cancelamento da venda.
 2. O sistema verifica que não há pagamentos (RN05).
-3. O sistema devolve o estoque dos itens e remove a venda, em uma transação.
+3. O sistema remove a venda.
 
 **Fluxo alternativo:** 2a. Há pagamento: erro 409; o lojista deve remover os pagamentos antes, se for o caso.
 

@@ -1,14 +1,14 @@
 # Cobrei
 
-**Cobrar fiado sem constrangimento.** Sistema de vendas fiado para pequenos comércios (mercadinhos, padarias, mercearias). Substitui o caderninho de papel: registra clientes, produtos, vendas a prazo com vencimento e limite de crédito, pagamentos parciais ou totais e, principalmente, **mostra quem está devendo há mais tempo** e gera a cobrança pronta no WhatsApp.
+**Cobrar fiado sem constrangimento.** Sistema de vendas fiado para pequenos comércios (mercadinhos, padarias, mercearias). Substitui o caderninho de papel: registra clientes, vendas a prazo com vencimento e limite de crédito, pagamentos parciais ou totais e, principalmente, **mostra quem está devendo há mais tempo** e gera a cobrança pronta no WhatsApp.
 
 ## Funcionalidades
 | ID | Funcionalidade | Escopo |
 |---|---|---|
 | RF01 | Login do lojista (JWT) | Implementação |
 | RF02 | CRUD de clientes com limite de crédito | Implementação |
-| RF03 | CRUD de produtos com estoque | Implementação |
-| RF04 | Venda fiado com itens, vencimento e checagem de limite e estoque | Implementação |
+| RF03 | Produtos e estoque | Removido do escopo |
+| RF04 | Venda fiado com valor, descrição, vencimento e checagem de limite | Implementação |
 | RF05 | Pagamento parcial ou total por venda | Implementação |
 | RF06 | Ranking de devedores pelo atraso mais antigo (Em dia / Atenção / Crítico) | Implementação |
 | RF07 | Cobrança por WhatsApp com mensagem pronta e histórico | Implementação (link wa.me, envio simulado) |
@@ -31,7 +31,7 @@ docker compose up --build
 | API | http://localhost:3333/api (saúde em `/api/health`) |
 | PostgreSQL | localhost:5433 (usuário/senha/banco: `fiado`) |
 
-Login de demonstração: **admin@fiado.com / 123456**. Na primeira subida a API aplica a migration e popula dados de exemplo (8 clientes, 10 produtos, vendas com atrasos variados).
+Login de demonstração: **admin@fiado.com / 123456**. Na primeira subida a API aplica a migration e popula dados de exemplo (8 clientes, vendas com atrasos variados).
 
 Para zerar o banco: `docker compose down -v`.
 
@@ -50,7 +50,7 @@ backend/src
 ├── domain/                 regras puras: saldo, status da venda, dias de atraso, nível, limite, mensagem
 ├── application/
 │   ├── ports/              Notificador, Relogio
-│   └── usecases/           clientes, produtos, vendas, pagamentos, devedores, cobrança, painel
+│   └── usecases/           clientes, vendas, pagamentos, devedores, cobrança, painel
 ├── adapters/
 │   ├── http/               Express (rotas, validação Zod, JWT, erros)
 │   ├── persistence/        Prisma / PostgreSQL

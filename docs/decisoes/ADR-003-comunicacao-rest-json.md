@@ -7,12 +7,12 @@
 ## Contexto
 O frontend (React) e o backend (Node.js) são aplicações separadas, executadas em contêineres distintos (web em `http://localhost:8080` e api em `http://localhost:3333`). É preciso definir o estilo de comunicação e um contrato estável para que as duas partes possam ser desenvolvidas em paralelo.
 
-Os recursos do domínio são bem definidos: clientes, produtos, vendas, pagamentos, devedores, cobranças e painel.
+Os recursos do domínio são bem definidos: clientes, vendas, pagamentos, devedores, cobranças e painel.
 
 ## Decisão
 Expor uma API **REST com JSON**, com base em `http://localhost:3333/api`, documentada em [`docs/API.md`](../API.md), que é o contrato entre frontend e backend:
 
-- Recursos no plural e verbos HTTP (`GET`, `POST`, `PUT`, `DELETE`) para as operações de CRUD: `/clientes`, `/produtos`, `/vendas`, `/pagamentos`.
+- Recursos no plural e verbos HTTP (`GET`, `POST`, `PUT`, `DELETE`) para as operações de CRUD: `/clientes`, `/vendas`, `/pagamentos`.
 - Recursos de leitura derivados do domínio: `GET /devedores` e `GET /dashboard`.
 - Ação de negócio modelada como criação de recurso: `POST /cobrancas/:clienteId` cria uma cobrança (notificação) e `GET /cobrancas` lista o histórico.
 - Valores em reais como número, datas em ISO 8601.

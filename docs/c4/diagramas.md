@@ -11,7 +11,7 @@ C4Context
     Person(lojista, "Lojista", "Dono de mercadinho ou padaria. Registra vendas fiado e pagamentos, consulta devedores e cobra clientes.")
     Person_Ext(devedor, "Cliente devedor", "Freguês que compra fiado. Recebe a cobrança pelo WhatsApp.")
 
-    System(fiado, "Cobrei", "Controla clientes, produtos, vendas fiado e pagamentos, lista devedores por tempo de atraso e gera a cobrança por WhatsApp.")
+    System(fiado, "Cobrei", "Controla clientes, vendas fiado e pagamentos, lista devedores por tempo de atraso e gera a cobrança por WhatsApp.")
     System_Ext(whatsapp, "WhatsApp", "Abre a conversa com a mensagem pronta a partir do link wa.me.")
 
     Rel(lojista, fiado, "Usa", "HTTPS")
@@ -31,7 +31,7 @@ C4Container
     System_Boundary(fiado, "Cobrei") {
         Container(web, "Aplicação Web", "React, Vite, TypeScript, Tailwind", "Interface do lojista. http://localhost:8080")
         Container(api, "API Backend", "Node.js, Express, TypeScript, Prisma", "Regras de negócio em Arquitetura Hexagonal. http://localhost:3333/api")
-        ContainerDb(db, "Banco de Dados", "PostgreSQL", "Usuários, clientes, produtos, vendas, itens, pagamentos e notificações")
+        ContainerDb(db, "Banco de Dados", "PostgreSQL", "Usuários, clientes, vendas, pagamentos e notificações")
     }
 
     Rel(lojista, web, "Usa", "HTTPS")
@@ -59,7 +59,7 @@ flowchart TB
 
         subgraph app["application"]
             uc["Casos de Uso<br/>Autenticar, RegistrarVenda, CancelarVenda,<br/>RegistrarPagamento, ListarDevedores,<br/>GerarCobranca, ObterDashboard"]
-            portas["Portas<br/>ClienteRepository, ProdutoRepository,<br/>VendaRepository, PagamentoRepository,<br/>NotificacaoRepository, UsuarioRepository,<br/>TokenService, Notificador, Relogio"]
+            portas["Portas<br/>ClienteRepository,<br/>VendaRepository, PagamentoRepository,<br/>NotificacaoRepository, UsuarioRepository,<br/>TokenService, Notificador, Relogio"]
         end
 
         subgraph dom["domain (regras puras)"]
@@ -107,28 +107,14 @@ erDiagram
         string observacao
         datetime criadoEm
     }
-    Produto {
-        int id PK
-        string nome
-        decimal preco
-        int estoque
-        datetime criadoEm
-    }
     Venda {
         int id PK
         int clienteId FK
         datetime data
         datetime vencimento
         decimal total
+        string descricao
         string status "ABERTA, PARCIAL, QUITADA"
-    }
-    ItemVenda {
-        int id PK
-        int vendaId FK
-        int produtoId FK
-        int quantidade
-        decimal precoUnitario
-        decimal subtotal
     }
     Pagamento {
         int id PK
@@ -147,8 +133,6 @@ erDiagram
     }
 
     Cliente ||--o{ Venda : "compra fiado"
-    Venda ||--|{ ItemVenda : "contém"
-    Produto ||--o{ ItemVenda : "é vendido em"
     Venda ||--o{ Pagamento : "recebe"
     Cliente ||--o{ Pagamento : "paga"
     Cliente ||--o{ Notificacao : "é cobrado por"

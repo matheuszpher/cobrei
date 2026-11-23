@@ -15,7 +15,7 @@ Adotar a **Arquitetura Hexagonal (Ports and Adapters)** de forma leve no backend
 - **domain:** regras puras, sem dependência de framework, banco ou relógio: cálculo de saldo, dias de atraso, nível (EM_DIA, ATENCAO, CRITICO) e validação de limite de crédito.
 - **application:** casos de uso que orquestram o domínio e declaram as **portas**:
   - Portas de entrada: casos de uso como `Autenticar`, `RegistrarVenda`, `CancelarVenda`, `RegistrarPagamento`, `ListarDevedores`, `GerarCobranca` e `ObterDashboard`.
-  - Portas de saída: `ClienteRepository`, `ProdutoRepository`, `VendaRepository`, `PagamentoRepository`, `NotificacaoRepository`, `UsuarioRepository`, `Notificador` e `Relogio`.
+  - Portas de saída: `ClienteRepository`, `VendaRepository`, `PagamentoRepository`, `NotificacaoRepository`, `UsuarioRepository`, `Notificador` e `Relogio`.
 - **adapters:**
   - Entrada: controllers e rotas HTTP (Express).
   - Saída: repositórios Prisma, `WhatsAppLinkNotificador` e `RelogioSistema`.

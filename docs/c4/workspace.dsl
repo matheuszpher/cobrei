@@ -8,19 +8,19 @@ workspace "Cobrei: Vendas Fiado para Pequenos Comércios" "Modelo C4 do trabalho
 
         whatsapp = softwareSystem "WhatsApp" "Aplicativo de mensagens. Abre a conversa com a mensagem de cobrança preenchida a partir do link wa.me." "Externo"
 
-        fiado = softwareSystem "Cobrei" "Controla clientes, produtos, vendas fiado e pagamentos, lista os devedores por tempo de atraso e gera a cobrança por WhatsApp." {
-            web = container "Aplicação Web" "Interface do lojista: clientes, produtos, vendas, pagamentos, devedores, cobranças e painel. Servida em http://localhost:8080." "React + Vite + TypeScript + Tailwind" "Browser"
+        fiado = softwareSystem "Cobrei" "Controla clientes, vendas fiado e pagamentos, lista os devedores por tempo de atraso e gera a cobrança por WhatsApp." {
+            web = container "Aplicação Web" "Interface do lojista: clientes, vendas, pagamentos, devedores, cobranças e painel. Servida em http://localhost:8080." "React + Vite + TypeScript + Tailwind" "Browser"
             api = container "API Backend" "Regras de negócio do fiado, organizada em Arquitetura Hexagonal (domain, application, adapters). Exposta em http://localhost:3333/api." "Node.js + Express + TypeScript + Prisma" {
                 controllers = component "Controllers HTTP" "Rotas Express, validação de entrada e mapeamento de erros de domínio para status HTTP (adaptador de entrada)." "Express"
                 authMiddleware = component "Middleware JWT" "Valida o token Bearer em todas as rotas, exceto /auth e /health." "jsonwebtoken"
                 casosDeUso = component "Casos de Uso" "Autenticar, CadastrarCliente, RegistrarVenda, CancelarVenda, RegistrarPagamento, ListarDevedores, GerarCobranca e ObterDashboard." "Application"
-                portas = component "Portas" "Interfaces: ClienteRepository, ProdutoRepository, VendaRepository, PagamentoRepository, NotificacaoRepository, UsuarioRepository, TokenService, Notificador e Relogio." "Application (interfaces)"
+                portas = component "Portas" "Interfaces: ClienteRepository, VendaRepository, PagamentoRepository, NotificacaoRepository, UsuarioRepository, TokenService, Notificador e Relogio." "Application (interfaces)"
                 dominio = component "Domínio" "Regras puras: cálculo de saldo, dias de atraso, nível (EM_DIA, ATENCAO, CRITICO), validação de limite de crédito e de pagamento." "Domain (TypeScript puro)"
                 repositorios = component "Repositórios Prisma" "Implementam as portas de repositório e gravam em transação." "Prisma Client"
                 notificadorWhats = component "WhatsAppLinkNotificador" "Monta a mensagem de cobrança e o link wa.me. Envio simulado." "Adaptador de saída"
                 relogio = component "RelogioSistema" "Fornece a data atual ao caso de uso." "Adaptador de saída"
             }
-            db = container "Banco de Dados" "Armazena usuários, clientes, produtos, vendas, itens, pagamentos e notificações." "PostgreSQL" "Database"
+            db = container "Banco de Dados" "Armazena usuários, clientes, vendas, pagamentos e notificações." "PostgreSQL" "Database"
         }
 
         # Relações no nível de contexto

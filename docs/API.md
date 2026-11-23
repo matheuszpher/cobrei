@@ -16,18 +16,13 @@ Erros: `{ "erro": "mensagem" }` com status 400/401/404/409.
 
 `Cliente = { id, nome, telefone, email, endereco, limiteCredito, observacao, criadoEm, saldoDevedor }`
 
-## Produtos
-- `GET /produtos?busca=` · `POST /produtos` `{ nome, preco, estoque }` · `PUT /produtos/:id` · `DELETE /produtos/:id`
-
-`Produto = { id, nome, preco, estoque, criadoEm }`
-
 ## Vendas (fiado)
 - `GET /vendas?status=ABERTA|PARCIAL|QUITADA&clienteId=` → `Venda[]`
 - `GET /vendas/:id` → `Venda`
-- `POST /vendas` `{ clienteId, vencimento, itens: [{ produtoId, quantidade }] }` → `Venda` (409 se passar o limite de crédito ou faltar estoque)
-- `DELETE /vendas/:id` (409 se já tiver pagamento; devolve estoque)
+- `POST /vendas` `{ clienteId, vencimento, valor, descricao? }` → `Venda` (409 se passar o limite de crédito)
+- `DELETE /vendas/:id` (409 se já tiver pagamento)
 
-`Venda = { id, clienteId, cliente: { id, nome }, data, vencimento, total, valorPago, saldo, status, diasAtraso, itens: [{ id, produtoId, produto: { nome }, quantidade, precoUnitario, subtotal }] }`
+`Venda = { id, clienteId, cliente: { id, nome }, data, vencimento, total, valorPago, saldo, status, diasAtraso, descricao }`
 
 ## Pagamentos
 - `GET /pagamentos?clienteId=` → `Pagamento[]`
